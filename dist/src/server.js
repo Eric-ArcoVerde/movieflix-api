@@ -1,39 +1,32 @@
-import express from 'express'
-import { PrismaClient } from '../generated/prisma/index.js'
-import swaggerUi from 'swagger-ui-express'
-import swaggerDocument from '../swagger.json' with { type: 'json' }
-
-const port = 3000
-const app = express()
-const prisma = new PrismaClient()
-
-app.use(express.json())
-app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument))
-
+import express from 'express';
+import { PrismaClient } from '../generated/prisma/index.js';
+import swaggerUi from 'swagger-ui-express';
+import swaggerDocument from '../swagger.json' with { type: 'json' };
+const port = 3000;
+const app = express();
+const prisma = new PrismaClient();
+app.use(express.json());
+app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 app.get('/movies', async (_, res) => {
     const movies = await prisma.movie.findMany({
         orderBy: { title: 'asc' },
         include: { genres: true, languages: true },
-    })
-    res.json(movies)
-})
-
+    });
+    res.json(movies);
+});
 app.post('/movies', async (req, res) => {
-    const { title, genre_id, language_id, oscar_count, release_date } = req.body
-
+    const { title, genre_id, language_id, oscar_count, release_date } = req.body;
     try {
         const movieWithSameTitle = await prisma.movie.findFirst({
             where: {
                 title: { equals: title, mode: 'insensitive' },
             },
-        })
-
+        });
         if (movieWithSameTitle) {
             return res
                 .status(409)
-                .send({ message: 'Já existe um filme com esse título' })
+                .send({ message: 'Já existe um filme com esse título' });
         }
-
         await prisma.movie.create({
             data: {
                 title,
@@ -42,64 +35,56 @@ app.post('/movies', async (req, res) => {
                 oscar_count,
                 release_date: new Date(release_date),
             },
-        })
-    } catch (error) {
-        return res.status(500).send({ message: 'Falha ao cadastrar um filme' })
+        });
     }
-
-    res.status(201).send()
-})
-
+    catch (error) {
+        return res.status(500).send({ message: 'Falha ao cadastrar um filme' });
+    }
+    res.status(201).send();
+});
 app.put('/movies/:id', async (req, res) => {
-    const id = Number(req.params.id)
-
+    const id = Number(req.params.id);
     try {
         const movie = await prisma.movie.findUnique({
             where: { id },
-        })
-
+        });
         if (!movie) {
-            return res.status(404).send({ message: 'Filme não encontrado' })
+            return res.status(404).send({ message: 'Filme não encontrado' });
         }
-        const data = { ...req.body }
+        const data = { ...req.body };
         data.release_date = data.release_date
             ? new Date(data.release_date)
-            : undefined
-
+            : undefined;
         await prisma.movie.update({
             where: {
                 id,
             },
             data: data,
-        })
-    } catch (error) {
+        });
+    }
+    catch (error) {
         return res
             .status(500)
-            .send({ message: 'Falha ao atualizar o registro' })
+            .send({ message: 'Falha ao atualizar o registro' });
     }
-    res.status(200).send()
-})
-
+    res.status(200).send();
+});
 app.delete('/movies/:id', async (req, res) => {
-    const id = Number(req.params.id)
-
+    const id = Number(req.params.id);
     try {
         const movie = await prisma.movie.findUnique({
             where: { id },
-        })
-
+        });
         if (!movie) {
-            return res.status(404).send({ message: 'Filme não encontrado' })
+            return res.status(404).send({ message: 'Filme não encontrado' });
         }
-
-        await prisma.movie.delete({ where: { id } })
-    } catch (error) {
-        res.status(500).send({ message: 'Falha ao remover o registro' })
+        await prisma.movie.delete({ where: { id } });
     }
-
-    res.status(200).send()
-})
-
+    catch (error) {
+        res.status(500).send({ message: 'Falha ao remover o registro' });
+    }
+    res.status(200).send();
+});
 app.get('/movies/:genderName', async (req, res) => {
     try {
         const moviesFilteredByGenderName = await prisma.movie.findMany({
@@ -115,16 +100,16 @@ app.get('/movies/:genderName', async (req, res) => {
                     },
                 },
             },
-        })
-
-        res.status(200).send(moviesFilteredByGenderName)
-    } catch (error) {
+        });
+        res.status(200).send(moviesFilteredByGenderName);
+    }
+    catch (error) {
         return res
             .status(500)
-            .send({ message: 'Falha ao filtrar filmes por gênero' })
+            .send({ message: 'Falha ao filtrar filmes por gênero' });
     }
-})
-
+});
 app.listen(port, () => {
-    console.log(`Servidor em execução em http://localhost:${port}`)
-})
+    console.log(`Servidor em execução em http://localhost:${port}`);
+});
+//# sourceMappingURL=server.js.map
